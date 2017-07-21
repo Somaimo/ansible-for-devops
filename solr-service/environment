@@ -1,0 +1,2 @@
+# File that initializes important variables and can be used test vagrant and ansible settings
+ANSIBLE_HOSTS=./hosts
