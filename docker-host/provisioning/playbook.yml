@@ -1,0 +1,78 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - vars.yml
+
+  pre_tasks:
+    - name: Update apt cache if needed.
+      apt: update_cache=yes cache_valid_time=3600
+
+  handlers:
+    - name: restart-docker
+      service: name=docker state=restarted
+
+  tasks:
+    - name: Create User to edit code and such
+      user:
+        name: coder
+        shell: /bin/bash
+        groups: adm
+        password: $6$rounds=656000$KKJpJBIYh8q/CKdp$C6lF4iF1A9sJjQ95m88HSasVfipKNafdhODEO800nA9xZSs8S8252toHkqmCenm4iicNWeJw76P0oFBuogS0H0
+
+    - name: Get software for apt repository management.
+      apt: "name={{ item }} state=present"
+      with_items:
+        - python-apt
+        - python-pycurl
+
+    - name: Add pre-requisites to install docker.
+      apt: "name={{ item }} state=present"
+      with_items:
+        - apt-transport-https
+        - curl
+        - ca-certificates
+        - software-properties-common
+        - git
+    
+    - name: Add GPG key for the docker repository.
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add GPG key for microsoft visual studio code repo
+      apt_key: 
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: Add docker repo
+      apt_repository: 
+        repo: deb https://download.docker.com/linux/ubuntu yakkety stable
+        state: present
+    - name: add Microsoft repo
+      apt_repository:
+        repo: deb https://packages.microsoft.com/repos/vscode stable main
+        state: present
+
+    - name: Install docker community engine
+      apt:
+        name: docker-ce
+        update_cache: yes
+        state: present
+
+    - name: Install Visual Studio Code
+      apt:
+        name: code
+        update_cache: yes
+        state: present
+
+    - name: Disable the firewall (since this is for local dev only).
+      service: name=ufw state=stopped
+
+    - name: Add user coder to docker group
+      user:
+        name: coder
+        groups: docker
+
+    - name: restart docker
+      service: name=docker state=restarted
