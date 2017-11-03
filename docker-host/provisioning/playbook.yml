@@ -20,6 +20,11 @@
         groups: adm
         password: $6$rounds=656000$KKJpJBIYh8q/CKdp$C6lF4iF1A9sJjQ95m88HSasVfipKNafdhODEO800nA9xZSs8S8252toHkqmCenm4iicNWeJw76P0oFBuogS0H0
 
+    - name: update locale to a en_US.UTF-8
+      shell: update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 
+      args:
+        executable: /bin/bash
+
     - name: Get software for apt repository management.
       apt: "name={{ item }} state=present"
       with_items:
@@ -73,6 +78,12 @@
       user:
         name: coder
         groups: docker
+
+    - name: install vscode extension as user coder
+      shell: code --install-extension PeterJausovec.vscode-docker 
+      args:
+        executable: /bin/bash
+      become_user: coder
 
     - name: restart docker
       service: name=docker state=restarted
